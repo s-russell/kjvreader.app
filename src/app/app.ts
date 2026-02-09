@@ -1,12 +1,14 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { JsonPipe } from '@angular/common';
+
+import { KjvDataService } from './services/kjv-data.service';
 
 @Component({
   selector: 'kjv-root',
-  imports: [RouterOutlet],
+  imports: [JsonPipe],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('kjv-reader');
+  protected readonly kjvDataService = inject(KjvDataService);
 }

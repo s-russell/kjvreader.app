@@ -31,6 +31,7 @@ export interface KjvChapter {
 
 export interface KjvBook {
   osis_id: string;
+  name: string;
   titles: KjvTitle[];
   chapters: KjvChapter[];
 }

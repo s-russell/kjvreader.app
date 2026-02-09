@@ -19,6 +19,11 @@ export class KjvDataService {
 
     const data = await firstValueFrom(this.http.get<KjvBook[]>('/kjv.json'));
     this.books = data;
+
+    this.books.forEach(book => {
+      book.name = book.chapters[0].titles[0].short || "unknown"
+      console.log(`found ${book.name}`)
+    })
   }
 
   get kjvBooks(): readonly KjvBook[] {
