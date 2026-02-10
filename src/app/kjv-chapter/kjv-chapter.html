@@ -1,0 +1,18 @@
+<section class="chapter">
+  <header class="chapter__header">
+    <h2 class="chapter__ref">{{ chapter().osis_ref }}</h2>
+    <p class="chapter__title" *ngIf="title() as t">{{ t }}</p>
+  </header>
+
+  <div class="chapter__body">
+    <div class="paragraph" *ngFor="let paragraph of chapter().paragraphs; let paragraphIndex = index">
+      <div class="paragraph__label">¶ {{ paragraphIndex + 1 }}</div>
+
+      <p class="verse" *ngFor="let verse of paragraph.verses">
+        <span class="verse__n">{{ verse.n }}</span>
+        <span class="verse__text">{{ verseText(verse) }}</span>
+      </p>
+    </div>
+  </div>
+</section>
+
