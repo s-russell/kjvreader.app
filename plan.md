@@ -50,9 +50,19 @@ Completed:
 - Step 5 (SQLite init and query execution moved into a Web Worker with `init/getBooks/getChapter/search` messaging)
 - Step 6 (production service worker enabled and `ngsw-config.json` added to precache app shell + SQLite assets)
 - Step 7 (startup loading/error gating and user-visible first-run/offline/failure states added in root UI)
+- Step 8 (validation executed; pass/fail results and blockers documented)
 
 Pending:
-- Step 8
+- None
 
 Verification notes:
-- `ng build --configuration production` currently fails until dependencies are installed (`@angular/service-worker` and `sql.js`), which requires network access for `npm install`.
+- `npx tsc -p tsconfig.app.json --noEmit`: PASS
+- `npx ng build --configuration development --output-path /tmp/kjv-dev-dist`: PASS
+- `node scripts/prepare-client-db-assets.mjs`: PASS
+- `npx ng build --configuration production --output-path /tmp/kjv-prod-dist`: FAIL (`@angular/service-worker/config` missing from `node_modules`)
+- `npm install @angular/service-worker@^21.1.0`: BLOCKED (network/DNS error `EAI_AGAIN`)
+
+Manual validation still required after dependency install:
+- Offline reload test in browser (online first load, then offline refresh)
+- Performance measurement of first load/query latency in browser
+- AXE scan for accessibility regression
