@@ -1,1 +1,28 @@
-<pre>{{ kjvDataService.kjvBooks | json }}</pre>
+<main class="shell">
+  <h1>KJV Reader</h1>
+  <p class="status" aria-live="polite">{{ statusMessage() }}</p>
+
+  @if (startupState() === 'loading') {
+    <section class="panel">
+      <p>Downloading and indexing SQLite data for offline reading.</p>
+    </section>
+  } @else if (startupState() === 'error') {
+    <section class="panel error">
+      <p>Unable to initialize the offline database.</p>
+      @if (errorMessage()) {
+        <p class="error-details">{{ errorMessage() }}</p>
+      }
+      <button type="button" (click)="retryInitialization()">Retry Setup</button>
+    </section>
+  } @else {
+    <section class="panel">
+      <p>Total books loaded: {{ totalBooks() }}</p>
+      <h2>Preview</h2>
+      <ul>
+        @for (book of previewBooks(); track book.osis_id) {
+          <li>{{ book.name }}</li>
+        }
+      </ul>
+    </section>
+  }
+</main>

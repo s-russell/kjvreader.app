@@ -49,9 +49,10 @@ Completed:
 - Step 4 (data flow switched from JSON loading to SQLite-backed `KjvDataService`)
 - Step 5 (SQLite init and query execution moved into a Web Worker with `init/getBooks/getChapter/search` messaging)
 - Step 6 (production service worker enabled and `ngsw-config.json` added to precache app shell + SQLite assets)
+- Step 7 (startup loading/error gating and user-visible first-run/offline/failure states added in root UI)
 
 Pending:
-- Steps 7 through 8
+- Step 8
 
 Verification notes:
 - `ng build --configuration production` currently fails until dependencies are installed (`@angular/service-worker` and `sql.js`), which requires network access for `npm install`.
