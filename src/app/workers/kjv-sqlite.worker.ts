@@ -1,3 +1,4 @@
+import initSqlJs from 'sql.js';
 import type { KjvSqliteBook, KjvSqliteVerse } from '../models/kjv-sqlite.model';
 
 type SqlValue = number | string | Uint8Array | null;
@@ -17,17 +18,6 @@ interface SqlDatabase {
 
 interface SqlModule {
   Database: new (data?: Uint8Array) => SqlDatabase;
-}
-
-interface SqlJsConfig {
-  locateFile: (filename: string) => string;
-}
-
-interface WorkerScope {
-  initSqlJs?: (config: SqlJsConfig) => Promise<SqlModule>;
-  importScripts: (...urls: readonly string[]) => void;
-  onmessage: ((event: MessageEvent<WorkerRequest>) => void) | null;
-  postMessage: (message: WorkerResponse<unknown>) => void;
 }
 
 interface InitWorkerRequest {
@@ -74,13 +64,11 @@ interface WorkerErrorResponse {
 
 type WorkerResponse<T> = WorkerSuccessResponse<T> | WorkerErrorResponse;
 
-const workerScope = self as unknown as WorkerScope;
-
 let database: SqlDatabase | null = null;
 let sqlModulePromise: Promise<SqlModule> | null = null;
 let databaseInitialization: Promise<void> | null = null;
 
-workerScope.onmessage = (event: MessageEvent<WorkerRequest>) => {
+self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   void handleRequest(event.data);
 };
 
@@ -111,7 +99,7 @@ async function handleRequest(request: WorkerRequest): Promise<void> {
 }
 
 function postSuccess<T>(id: number, result: T): void {
-  workerScope.postMessage({
+  self.postMessage({
     id,
     ok: true,
     result,
@@ -119,7 +107,7 @@ function postSuccess<T>(id: number, result: T): void {
 }
 
 function postError(id: number, error: string): void {
-  workerScope.postMessage({
+  self.postMessage({
     id,
     ok: false,
     error,
@@ -155,18 +143,49 @@ async function loadSqlModule(): Promise<SqlModule> {
     return sqlModulePromise;
   }
 
-  sqlModulePromise = (async () => {
-    workerScope.importScripts('/assets/sql.js/sql-wasm.js');
-    if (!workerScope.initSqlJs) {
-      throw new Error('sql.js failed to load in worker scope.');
-    }
+  sqlModulePromise = (async (): Promise<SqlModule> => {
+    const wasmUrl = new URL('/assets/sql.js/sql-wasm.wasm', self.location.origin).toString();
+    const wasmBinary = await fetchWasmBinary(wasmUrl);
 
-    return workerScope.initSqlJs({
-      locateFile: (filename: string) => `/assets/sql.js/${filename}`,
+    const module = await initSqlJs({
+      locateFile: () => wasmUrl,
+      wasmBinary,
     });
+    return module as unknown as SqlModule;
   })();
 
   return sqlModulePromise;
+}
+
+async function fetchWasmBinary(wasmUrl: string): Promise<Uint8Array> {
+  const response = await fetch(wasmUrl);
+  if (!response.ok) {
+    throw new Error(`Unable to fetch SQLite wasm at ${wasmUrl} (HTTP ${response.status}).`);
+  }
+
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (!isWasmBinary(bytes)) {
+    const preview = bytes
+      .slice(0, 16)
+      .reduce((text, byte) => text + String.fromCharCode(byte), '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    throw new Error(
+      `SQLite wasm fetch returned non-binary content at ${wasmUrl}. Response starts with: "${preview}".`
+    );
+  }
+
+  return bytes;
+}
+
+function isWasmBinary(bytes: Uint8Array): boolean {
+  return (
+    bytes.length >= 4 &&
+    bytes[0] === 0x00 &&
+    bytes[1] === 0x61 &&
+    bytes[2] === 0x73 &&
+    bytes[3] === 0x6d
+  );
 }
 
 function getBooks(): readonly KjvSqliteBook[] {
