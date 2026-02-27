@@ -47,6 +47,7 @@ Completed:
 - Step 2 (runtime wiring)
 - Step 3 (SQLite service and typed models)
 - Step 4 (data flow switched from JSON loading to SQLite-backed `KjvDataService`)
+- Step 5 (SQLite init and query execution moved into a Web Worker with `init/getBooks/getChapter/search` messaging)
 
 Pending:
-- Steps 5 through 8
+- Steps 6 through 8
