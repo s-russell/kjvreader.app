@@ -1,29 +1,28 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
 
 import { KjvBook } from '../models/kjv.model';
+import { KjvSqliteService } from './kjv-sqlite.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class KjvDataService {
-  private books: readonly KjvBook[] = [];
+  private readonly sqlite = inject(KjvSqliteService);
 
-  constructor(private readonly http: HttpClient) {}
+  private books: readonly KjvBook[] = [];
 
   async load(): Promise<void> {
     if (this.books.length > 0) {
       return;
     }
 
-    const data = await firstValueFrom(this.http.get<KjvBook[]>('/kjv.json'));
-    this.books = data;
-
-    this.books.forEach(book => {
-      book.name = book.chapters[0].titles[0].short || "unknown"
-      console.log(`found ${book.name}`)
-    })
+    const sqliteBooks = await this.sqlite.getBooks();
+    this.books = sqliteBooks.map((book) => ({
+      osis_id: book.osisId,
+      name: book.displayName,
+      titles: [],
+      chapters: [],
+    }));
   }
 
   get kjvBooks(): readonly KjvBook[] {

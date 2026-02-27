@@ -4,7 +4,6 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { KjvDataService } from './services/kjv-data.service';
-import { KjvSqliteService } from './services/kjv-sqlite.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -12,6 +11,5 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideAppInitializer(() => inject(KjvDataService).load()),
-    provideAppInitializer(() => inject(KjvSqliteService).load())
-  ]
+  ],
 };
